@@ -90,7 +90,7 @@ export function GhostButton({ children, ...props }) {
 
 export function AccentButton({ children, ...props }) {
   return (
-    <button className="h-9 rounded-lg bg-slate-950 px-3 text-sm font-medium text-white ring-1 ring-amber-700/30 hover:bg-slate-900 disabled:opacity-60" {...props}>
+    <button className="h-9 rounded-lg border border-[#C9DCFF] bg-[#EAF2FF] px-3 text-sm font-medium text-[#1E4A9A] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#D7E6FF] disabled:opacity-60" {...props}>
       {children}
     </button>
   )

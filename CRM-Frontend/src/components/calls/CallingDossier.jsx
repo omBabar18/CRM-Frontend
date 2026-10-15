@@ -20,7 +20,7 @@ export function CallingDossier({ lead, staff, outcome, notes, nextAt, onOutcome,
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <a href={telLink(lead.mobile)} className="inline-flex h-9 items-center gap-2 rounded-lg bg-slate-950 px-3 text-sm font-medium text-white">
+          <a href={telLink(lead.mobile)} className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#C9DCFF] bg-[#EAF2FF] px-3 text-sm font-medium text-[#1E4A9A] transition hover:bg-[#D7E6FF]">
             <Phone size={15} /> Dial lead
           </a>
           <a href={waLink(lead.mobile, `Namaste ${lead.name}, this is DG Gold Sangli.`)} className="inline-flex h-9 items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-sm font-medium text-emerald-800">
@@ -81,7 +81,7 @@ export function CallingDossier({ lead, staff, outcome, notes, nextAt, onOutcome,
           <input type="datetime-local" value={nextAt} onChange={(event) => onNext(event.target.value)} className="h-9 w-full rounded-lg border border-slate-200 px-3 text-sm tabular-nums outline-none focus:ring-1 focus:ring-amber-500" />
         </label>
       </div>
-      <button type="button" onClick={onSave} className="h-9 rounded-lg bg-slate-950 px-4 text-sm font-medium text-white ring-1 ring-amber-700/30">Save outcome</button>
+      <button type="button" onClick={onSave} className="h-9 rounded-lg border border-[#C9DCFF] bg-[#EAF2FF] px-4 text-sm font-medium text-[#1E4A9A] transition hover:-translate-y-0.5 hover:bg-[#D7E6FF]">Save outcome</button>
     </div>
   )
 }

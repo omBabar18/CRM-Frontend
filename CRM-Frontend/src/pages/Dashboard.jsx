@@ -1,19 +1,29 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { Cell, Pie, PieChart, Tooltip } from 'recharts'
-import { Calendar, ChevronDown, IndianRupee, MessageCircle, Phone, Plus, Scale, Users, Wallet } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { AlertCircle, Calendar, ChevronDown, IndianRupee, MessageCircle, Phone, Plus, Scale, Users, Wallet } from 'lucide-react'
 import { can } from '../constants'
 import { useCrm } from '../context'
 import { achievement, dashboardPulse, leadSourceStats } from '../metrics'
 import { compactInr, fmtTime, inr, staffName } from '../utils'
-import { ChartFrame, Field, Modal } from '../ui'
+import { Field, Modal } from '../ui'
 import { GoldRateBadge } from '../components/dashboard/GoldRateBadge'
 import { QuickActionButton } from '../components/dashboard/QuickActionButton'
 import { StatCard } from '../components/dashboard/StatCard'
+import { CustomerIcon, FacebookIcon, GoogleIcon, GooglePinIcon, InstagramIcon, OtherIcon, ReferralIcon, WalkInIcon, WhatsAppIcon } from '../components/dashboard/SourceIcons'
 
-const SLICES = ['#0F766E', '#C4A574', '#1E293B', '#A8A29E', '#78716C']
 const DELTA = { k24: 0.45, k22: 0.32, k18: -0.18 }
+const SOURCE_LOOK = {
+  'Google Ads': { icon: GoogleIcon, box: 'bg-white', bar: 'bg-[#4285F4]' },
+  Instagram: { icon: InstagramIcon, box: 'bg-white', bar: 'bg-[#d62976]' },
+  Facebook: { icon: FacebookIcon, box: 'bg-white', bar: 'bg-[#1877F2]' },
+  WhatsApp: { icon: WhatsAppIcon, box: 'bg-white', bar: 'bg-[#25D366]' },
+  'Google Business Profile': { icon: GooglePinIcon, box: 'bg-white', bar: 'bg-[#EA4335]' },
+  Referral: { icon: ReferralIcon, box: 'bg-white', bar: 'bg-amber-500' },
+  'Walk-in': { icon: WalkInIcon, box: 'bg-white', bar: 'bg-orange-500' },
+  'Existing Customer': { icon: CustomerIcon, box: 'bg-white', bar: 'bg-teal-600' },
+  Other: { icon: OtherIcon, box: 'bg-white', bar: 'bg-slate-400' },
+}
 
 export function Dashboard() {
   const crm = useCrm()
@@ -41,8 +51,8 @@ export function Dashboard() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-950">Good day, {user.name.split(' ')[0]}.</h1>
-          <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
+          <h1 className="text-lg font-semibold tracking-tight text-slate-900">Good day, {user.name.split(' ')[0]}.</h1>
+          <p className="mt-0.5 flex items-center gap-2 text-xs font-normal text-slate-500">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
@@ -51,7 +61,7 @@ export function Dashboard() {
           </p>
         </div>
         {can(user, 'setTargets') && (
-          <button type="button" className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700" onClick={() => setRateOpen(true)}>Update rate</button>
+          <button type="button" className="h-9 rounded-xl border border-[#C9DCFF] bg-[#EAF2FF] px-3 text-sm font-medium text-[#1E4A9A] transition duration-200 hover:-translate-y-0.5 hover:bg-[#D7E6FF]" onClick={() => setRateOpen(true)}>Update rate</button>
         )}
       </div>
 
@@ -65,40 +75,52 @@ export function Dashboard() {
           vs yesterday · {fmtTime(db.rates.updatedAt)}
         </p>
 
-      <div className="flex flex-wrap gap-2">
-        <QuickActionButton icon={<Phone size={18} />} label="Call" onClick={() => navigate('/calls')} />
-        <QuickActionButton icon={<MessageCircle size={18} />} label="WhatsApp" tone="emerald" onClick={() => navigate('/whatsapp')} />
-        <QuickActionButton icon={<Calendar size={18} />} label="Follow-up" onClick={() => navigate('/follow-ups')} />
-        <QuickActionButton icon={<Plus size={18} />} label="Add lead" onClick={() => navigate('/leads')} />
-        <QuickActionButton icon={<Scale size={18} />} label="New valuation" tone="amber" onClick={() => navigate('/gold-purchase?new=1')} />
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+        <QuickActionButton icon={<Phone size={15} />} label="Call" hint="Open the queue" onClick={() => navigate('/calls')} />
+        <QuickActionButton icon={<MessageCircle size={15} />} label="WhatsApp" hint="Send a template" tone="emerald" onClick={() => navigate('/whatsapp')} />
+        <QuickActionButton icon={<Calendar size={15} />} label="Follow-up" hint="Due today" onClick={() => navigate('/follow-ups')} />
+        <QuickActionButton icon={<Plus size={15} />} label="Add lead" hint="New enquiry" onClick={() => navigate('/leads')} />
+        <QuickActionButton icon={<Scale size={15} />} label="New valuation" hint="Gold purchase" tone="amber" onClick={() => navigate('/gold-purchase?new=1')} />
       </div>
 
       {alertCount > 0 && (
-        <div className="overflow-hidden rounded-2xl border border-amber-200/80 bg-amber-50/70">
-          <button type="button" className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left" onClick={() => setAlertsOpen((value) => !value)}>
-            <span className="text-sm text-amber-950">
-              <span className="font-medium">{pulse.overdue} overdue follow-ups</span>
-              {pulse.overdueLoans > 0 && <span className="text-rose-700"> · {pulse.overdueLoans} gold loan past due</span>}
+        <motion.div layout className="overflow-hidden rounded-xl border border-rose-100 bg-gradient-to-r from-rose-50/80 to-white shadow-xs">
+          <button type="button" className="flex w-full items-center gap-3 px-3 py-3 text-left" onClick={() => setAlertsOpen((value) => !value)}>
+            <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white text-rose-600 shadow-sm">
+              <span className="absolute inset-0 animate-ping rounded-lg bg-rose-200/50" />
+              <AlertCircle size={16} className="relative" />
             </span>
-            <ChevronDown size={16} className={`text-amber-800 transition ${alertsOpen ? 'rotate-180' : ''}`} />
+            <span className="min-w-0">
+              <span className="block text-sm font-medium text-slate-800">Needs attention</span>
+              <span className="block text-[11px] text-slate-500">{pulse.overdue} follow-ups are late{pulse.overdueLoans > 0 ? ` · ${pulse.overdueLoans} loans past due` : ''}</span>
+            </span>
+            <span className="ml-auto rounded-md bg-white px-2 py-1 text-[11px] font-medium text-rose-700 shadow-sm">{alertCount}</span>
+            <ChevronDown size={16} className={`text-slate-400 transition duration-200 ${alertsOpen ? 'rotate-180' : ''}`} />
           </button>
-          {alertsOpen && (
-            <div className="space-y-1 border-t border-amber-200/70 px-2 py-2">
-              {buckets.overdue.slice(0, 4).map((lead) => (
-                <button key={lead.id} type="button" className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm hover:bg-white/70" onClick={() => navigate(`/calls?lead=${lead.id}`)}>
-                  <span>{lead.name}</span>
-                  <span className="text-xs text-amber-800">Follow-up</span>
-                </button>
-              ))}
-              {db.loans.filter((loan) => loan.status === 'Overdue').map((loan) => (
-                <button key={loan.id} type="button" className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-rose-800 hover:bg-white/70" onClick={() => navigate('/gold-loan')}>
-                  <span>{loan.id}</span>
-                  <span className="text-xs">Open loan</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+          <AnimatePresence initial={false}>
+            {alertsOpen && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                <div className="grid gap-2 border-t border-rose-100 p-3 sm:grid-cols-2">
+                  {buckets.overdue.map((lead) => (
+                    <button key={lead.id} type="button" className="flex items-center justify-between rounded-lg border border-white bg-white/80 px-3 py-2 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md" onClick={() => navigate(`/calls?lead=${lead.id}`)}>
+                      <span>
+                        <span className="block text-[13px] font-medium text-slate-700">{lead.name}</span>
+                        <span className="text-[11px] text-slate-400">{lead.requirement}</span>
+                      </span>
+                      <span className="rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-semibold text-rose-700">Overdue</span>
+                    </button>
+                  ))}
+                  {db.loans.filter((loan) => loan.status === 'Overdue').map((loan) => (
+                    <button key={loan.id} type="button" className="flex items-center justify-between rounded-lg border border-white bg-white/80 px-3 py-2 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md" onClick={() => navigate('/gold-loan')}>
+                      <span className="text-[13px] font-medium text-slate-700">{loan.id}</span>
+                      <span className="rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">Loan</span>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       )}
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5 [&>*]:min-w-0">
@@ -110,7 +132,7 @@ export function Dashboard() {
       </section>
 
       <section className="grid gap-3 lg:grid-cols-[1.3fr_0.7fr] [&>*]:min-w-0">
-        <article className="min-w-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5">
+        <article className="min-w-0 overflow-hidden rounded-xl border border-slate-200/80 bg-white p-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-950">Monthly target</h2>
             <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/15">{pct}%</span>
@@ -134,31 +156,38 @@ export function Dashboard() {
             })}
           </div>
         </article>
-        <article className="min-w-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5">
-          <h2 className="text-sm font-semibold text-slate-950">Lead sources</h2>
-          <ChartFrame height={210}>
-            {({ width, height }) => (
-              <PieChart width={width} height={height}>
-                <Pie data={sources} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={52} outerRadius={74} paddingAngle={3} stroke="none">
-                  {sources.map((entry, index) => <Cell key={entry.name} fill={SLICES[index % SLICES.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            )}
-          </ChartFrame>
-          <div className="space-y-1.5">
-            {sources.map((row, index) => (
-              <div key={row.name} className="flex min-w-0 items-center justify-between gap-3 text-xs text-slate-600">
-                <span className="flex min-w-0 items-center gap-2"><i className="h-2 w-2 shrink-0 rounded-full" style={{ background: SLICES[index % SLICES.length] }} /><span className="truncate">{row.name}</span></span>
-                <span className="font-medium text-slate-900">{row.value}</span>
-              </div>
-            ))}
+        <article className="min-w-0 overflow-hidden rounded-xl border border-slate-200/80 bg-white p-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-900">Lead sources</h2>
+            <span className="text-[11px] tabular-nums text-slate-400">{sources.reduce((sum, row) => sum + row.value, 0)} leads</span>
+          </div>
+          <div className="mt-4 space-y-3">
+            {sources.map((row) => {
+              const total = sources.reduce((sum, item) => sum + item.value, 0) || 1
+              const width = Math.round((row.value / total) * 100)
+              const look = SOURCE_LOOK[row.name] || { icon: OtherIcon, box: 'bg-white', bar: 'bg-slate-400' }
+              const Icon = look.icon
+              return (
+                <div key={row.name}>
+                  <div className="mb-1 flex items-center justify-between gap-3 text-xs">
+                    <span className="flex min-w-0 items-center gap-2 text-slate-600">
+                      <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-md ${look.box}`}><Icon size={13} /></span>
+                      <span className="truncate">{row.name}</span>
+                    </span>
+                    <span className="shrink-0 tabular-nums text-slate-500">{row.value} · {width}%</span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${width}%` }} transition={{ duration: 0.45 }} className={`h-full rounded-full ${look.bar}`} />
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </article>
       </section>
 
       <section className="grid gap-3 lg:grid-cols-2">
-        <article className="rounded-2xl border border-slate-200/80 bg-white p-5">
+        <article className="rounded-xl border border-slate-200/80 bg-white p-4">
           <h2 className="text-sm font-semibold text-slate-950">Staff</h2>
           <div className="mt-4 space-y-3">
             {team.map((person, index) => (
@@ -174,7 +203,7 @@ export function Dashboard() {
             ))}
           </div>
         </article>
-        <article className="rounded-2xl border border-slate-200/80 bg-white p-5">
+        <article className="rounded-xl border border-slate-200/80 bg-white p-4">
           <h2 className="text-sm font-semibold text-slate-950">Open tasks</h2>
           <div className="mt-4 space-y-2">
             {visibleTasks.filter((task) => task.status === 'Open').slice(0, 5).map((task) => (

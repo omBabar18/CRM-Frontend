@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { GOLD_TYPES, PAYMENT_MODES, PURITIES } from '../constants'
+import { GOLD_TYPES, LOCATIONS, PAYMENT_MODES, PURITIES } from '../constants'
 import { useCrm } from '../context'
 import { fmtDate, inr, staffName } from '../utils'
-import { Drawer, Field, PageHeader } from '../ui'
+import { Drawer, Field, Modal, PageHeader } from '../ui'
 
 export function GoldPurchase() {
-  const { db, visibleCustomers, addPurchase, rateFor } = useCrm()
+  const { db, visibleCustomers, addPurchase, addCustomer, rateFor } = useCrm()
   const [params, setParams] = useSearchParams()
   const [open, setOpen] = useState(params.get('new') === '1')
+  const [customerOpen, setCustomerOpen] = useState(false)
+  const [customerForm, setCustomerForm] = useState({ name: '', mobile: '', location: 'Sangli' })
   const [form, setForm] = useState({
     customerId: visibleCustomers[0]?.id || '',
     goldType: 'Jewellery',
@@ -50,8 +52,10 @@ export function GoldPurchase() {
         <form className="stack" onSubmit={(event) => { event.preventDefault(); addPurchase(form); setOpen(false) }}>
           <Field label="Customer">
             <select value={form.customerId} onChange={(event) => setForm({ ...form, customerId: event.target.value })}>
+              {!visibleCustomers.length && <option value="">No customer yet</option>}
               {visibleCustomers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
             </select>
+            <button type="button" className="btn btn-ghost" style={{ marginTop: 8 }} onClick={() => setCustomerOpen(true)}>Add customer</button>
           </Field>
           <div className="form-grid">
             <Field label="Gold type"><select value={form.goldType} onChange={(event) => setForm({ ...form, goldType: event.target.value })}>{GOLD_TYPES.map((item) => <option key={item}>{item}</option>)}</select></Field>
@@ -65,9 +69,23 @@ export function GoldPurchase() {
           <article className="card">
             <div className="kv"><span>Gross value</span><b>{inr(gross)}</b><span>Final payable</span><b>{inr(payable)}</b></div>
           </article>
-          <button className="btn btn-gold" type="submit">Save purchase</button>
+          <button className="btn btn-gold" type="submit" disabled={!form.customerId}>Save purchase</button>
         </form>
       </Drawer>
+      <Modal open={customerOpen} title="Add customer" onClose={() => setCustomerOpen(false)}>
+        <form className="stack" onSubmit={(event) => {
+          event.preventDefault()
+          const id = addCustomer(customerForm)
+          setForm((current) => ({ ...current, customerId: id }))
+          setCustomerForm({ name: '', mobile: '', location: 'Sangli' })
+          setCustomerOpen(false)
+        }}>
+          <Field label="Name"><input required value={customerForm.name} onChange={(event) => setCustomerForm({ ...customerForm, name: event.target.value })} /></Field>
+          <Field label="Mobile"><input required maxLength={10} value={customerForm.mobile} onChange={(event) => setCustomerForm({ ...customerForm, mobile: event.target.value })} /></Field>
+          <Field label="Location"><select value={customerForm.location} onChange={(event) => setCustomerForm({ ...customerForm, location: event.target.value })}>{LOCATIONS.map((item) => <option key={item}>{item}</option>)}</select></Field>
+          <button className="btn btn-gold" type="submit">Save customer</button>
+        </form>
+      </Modal>
     </div>
   )
 }

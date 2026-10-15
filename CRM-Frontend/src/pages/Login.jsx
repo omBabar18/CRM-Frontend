@@ -155,7 +155,7 @@ export function Login() {
                   key={number}
                   type="button"
                   onClick={() => { setMobile(number); setPassword('gold123') }}
-                  className={`rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset transition ${mobile === number ? 'bg-slate-950 text-white ring-slate-950' : 'bg-white text-slate-600 ring-slate-200 hover:bg-slate-50'}`}
+                  className={`rounded-lg px-3 py-1 text-xs font-medium ring-1 ring-inset transition duration-200 ${mobile === number ? 'border border-[#C9DCFF] bg-[#EAF2FF] text-[#1E4A9A] ring-[#C9DCFF]' : 'bg-white text-slate-600 ring-slate-200 hover:bg-slate-50'}`}
                 >
                   {label}
                 </button>
@@ -189,7 +189,7 @@ export function Login() {
                 )}
               </div>
             )}
-            <button type="submit" disabled={busy} className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 text-sm font-semibold text-white shadow-sm ring-1 ring-amber-700/40 transition duration-200 hover:bg-slate-900 disabled:opacity-70">
+            <button type="submit" disabled={busy} className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[#C9DCFF] bg-[#EAF2FF] text-sm font-medium text-[#1E4A9A] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#D7E6FF] disabled:opacity-70">
               {busy && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />}
               {mode === 'signup' ? 'Create account' : mode === 'forgot' ? (otp ? 'Save password' : 'Send OTP') : 'Continue'}
             </button>

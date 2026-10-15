@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
-  BarChart3, Bell, Calendar, CheckSquare, Coins, Contact, Landmark, LayoutDashboard,
+  AlertCircle, BarChart3, Bell, Calendar, CheckSquare, Coins, Contact, Landmark, LayoutDashboard,
   LogOut, Menu, MessageCircle, PanelLeft, Phone, Plus, RotateCcw, Search, Share2,
   Shield, Star, Target, Users, Wallet, Zap,
 } from 'lucide-react'
@@ -101,9 +101,9 @@ export function Layout() {
   }, [query, visibleLeads, visibleCustomers])
 
   const notices = [
-    ...buckets.overdue.slice(0, 4).map((lead) => ({ id: lead.id, title: `${lead.name} is overdue`, text: 'Follow-up date has passed', to: `/calls?lead=${lead.id}` })),
-    ...buckets.today.slice(0, 3).map((lead) => ({ id: `t-${lead.id}`, title: `Follow up ${lead.name}`, text: 'Due today', to: `/calls?lead=${lead.id}` })),
-    ...db.loans.filter((loan) => loan.status === 'Overdue').slice(0, 2).map((loan) => ({ id: loan.id, title: `${loan.id} is overdue`, text: 'Gold loan payment', to: '/gold-loan' })),
+    ...buckets.overdue.slice(0, 4).map((lead) => ({ id: lead.id, title: lead.name, text: 'Follow-up is overdue', tone: 'late', to: `/calls?lead=${lead.id}` })),
+    ...buckets.today.slice(0, 3).map((lead) => ({ id: `t-${lead.id}`, title: lead.name, text: 'Follow-up due today', tone: 'today', to: `/calls?lead=${lead.id}` })),
+    ...db.loans.filter((loan) => loan.status === 'Overdue').slice(0, 2).map((loan) => ({ id: loan.id, title: loan.id, text: 'Gold loan payment is late', tone: 'loan', to: '/gold-loan' })),
   ]
 
   const slim = collapsed && !mobile
@@ -176,7 +176,7 @@ export function Layout() {
               </div>
             )}
           </div>
-          <button type="button" className="hidden h-10 items-center gap-2 rounded-xl bg-slate-950 px-3 text-sm font-medium text-white sm:inline-flex" onClick={() => setLeadOpen(true)}>
+          <button type="button" className="hidden h-10 items-center gap-2 rounded-xl border border-[#C9DCFF] bg-[#EAF2FF] px-3 text-sm font-medium text-[#1E4A9A] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#D7E6FF] sm:inline-flex" onClick={() => setLeadOpen(true)}>
             <Plus size={15} /> New lead
           </button>
           <button type="button" title="Open dialer" className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-700" onClick={() => navigate('/calls')}>
@@ -205,14 +205,33 @@ export function Layout() {
               {notices.length > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500" />}
             </button>
             {panel === 'bell' && (
-              <div className="absolute right-0 top-12 z-30 w-72 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
-                {notices.length === 0 && <p className="px-3 py-3 text-sm text-slate-400">You are clear for now.</p>}
-                {notices.map((item) => (
-                  <button key={item.id} type="button" className="block w-full rounded-lg px-3 py-2 text-left hover:bg-slate-50" onClick={() => navigate(item.to)}>
-                    <span className="block text-sm font-medium">{item.title}</span>
-                    <span className="text-xs text-slate-400">{item.text}</span>
-                  </button>
-                ))}
+              <div className="absolute right-0 top-12 z-30 w-[340px] overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.12)]">
+                <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">Notifications</p>
+                    <p className="text-[11px] font-normal text-slate-400">{notices.length ? `${notices.length} waiting on the desk` : 'Nothing waiting'}</p>
+                  </div>
+                  <button type="button" className="text-xs font-medium text-[#1E4A9A]" onClick={() => { setPanel(null); navigate('/follow-ups') }}>View follow-ups</button>
+                </div>
+                <div className="max-h-80 space-y-1 overflow-y-auto p-2">
+                  {notices.length === 0 && (
+                    <div className="px-3 py-8 text-center">
+                      <span className="mx-auto grid h-9 w-9 place-items-center rounded-full bg-[#EAF2FF] text-[#1E4A9A]"><Bell size={15} /></span>
+                      <p className="mt-2 text-sm text-slate-500">You are clear for now.</p>
+                    </div>
+                  )}
+                  {notices.map((item) => (
+                    <button key={item.id} type="button" className="flex w-full items-start gap-3 rounded-xl px-2.5 py-2.5 text-left transition hover:bg-slate-50" onClick={() => { setPanel(null); navigate(item.to) }}>
+                      <span className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg ${item.tone === 'late' ? 'bg-rose-50 text-rose-600' : item.tone === 'loan' ? 'bg-slate-100 text-slate-600' : 'bg-[#EAF2FF] text-[#1E4A9A]'}`}>
+                        {item.tone === 'today' ? <Calendar size={14} /> : <AlertCircle size={14} />}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium text-slate-800">{item.title}</span>
+                        <span className="block text-xs font-normal text-slate-400">{item.text}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>

@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CalendarDays } from 'lucide-react'
 import { useCrm } from '../context'
 import { fmtDateTime, staffName, telLink, waLink } from '../utils'
+import { FollowupCalendar } from '../components/calls/FollowupCalendar'
 import { RowActions } from '../components/enterprise/RowActions'
 import { SegmentedTabs } from '../components/enterprise/SegmentedTabs'
 import { StatusBadge } from '../components/enterprise/StatusBadge'
@@ -15,17 +17,28 @@ const TABS = [
 ]
 
 export function Followups() {
-  const { buckets, db } = useCrm()
+  const { buckets, db, visibleLeads } = useCrm()
   const [tab, setTab] = useState('overdue')
+  const [calendar, setCalendar] = useState(false)
   const navigate = useNavigate()
   const rows = buckets[tab] || []
 
   return (
     <div className="min-w-0 space-y-3">
-      <div>
-        <h1 className="text-lg font-semibold tracking-tight text-slate-900">Follow-ups</h1>
-        <p className="text-xs font-normal text-slate-500">Every open lead stays on a dated next action.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight text-slate-900">Follow-ups</h1>
+          <p className="text-xs font-normal text-slate-500">Every open lead stays on a dated next action.</p>
+        </div>
+        <button
+          type="button"
+          className={`inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition duration-200 ${calendar ? 'border-[#C9DCFF] bg-[#EAF2FF] text-[#1E4A9A]' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
+          onClick={() => setCalendar((value) => !value)}
+        >
+          <CalendarDays size={15} /> {calendar ? 'Hide calendar' : 'Calendar view'}
+        </button>
       </div>
+      {calendar && <FollowupCalendar leads={visibleLeads} />}
       {buckets.overdue.length > 0 && tab !== 'overdue' && (
         <button type="button" className="flex w-full items-center justify-between rounded-lg border border-rose-200/70 bg-rose-50 px-3 py-2 text-left text-sm text-rose-800" onClick={() => setTab('overdue')}>
           <span>{buckets.overdue.length} overdue follow-ups are waiting.</span>

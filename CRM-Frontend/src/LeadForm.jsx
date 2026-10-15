@@ -20,7 +20,7 @@ const blank = () => ({
   notes: '',
 })
 
-const control = 'h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm outline-none focus:ring-1 focus:ring-amber-500'
+const control = 'h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] font-normal text-slate-600 shadow-none outline-none focus:ring-1 focus:ring-amber-500/40'
 
 export function LeadForm({ initial, onDone, formId = 'lead-form', hideSubmit = false }) {
   const { db, addLead, updateLead, toast } = useCrm()
@@ -76,9 +76,9 @@ export function LeadForm({ initial, onDone, formId = 'lead-form', hideSubmit = f
         <input type="datetime-local" value={form.nextFollowUp || ''} onChange={set('nextFollowUp')} className={`${control} tabular-nums`} />
       </Field>
       <div className="sm:col-span-2">
-        <Field label="Notes"><textarea value={form.notes || ''} onChange={set('notes')} className="min-h-20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-amber-500" /></Field>
+        <Field label="Notes"><textarea value={form.notes || ''} onChange={set('notes')} className="min-h-16 w-full rounded-lg border border-slate-200 px-2.5 py-2 text-[13px] font-normal text-slate-600 outline-none focus:ring-1 focus:ring-amber-500/40" /></Field>
       </div>
-      {!hideSubmit && <div className="sm:col-span-2"><button className="h-9 rounded-lg bg-slate-950 px-4 text-sm font-medium text-white" type="submit">{initial ? 'Save lead' : 'Add lead'}</button></div>}
+      {!hideSubmit && <div className="sm:col-span-2"><button className="h-8 rounded-lg border border-[#C9DCFF] bg-[#EAF2FF] px-4 text-[13px] font-medium text-[#1E4A9A] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#D7E6FF]" type="submit">{initial ? 'Save lead' : 'Add lead'}</button></div>}
     </form>
   )
 }
@@ -86,7 +86,7 @@ export function LeadForm({ initial, onDone, formId = 'lead-form', hideSubmit = f
 function Field({ label, hint, error, children }) {
   return (
     <label className="block min-w-0">
-      <span className="mb-1 block text-xs font-medium text-slate-700">{label}</span>
+      <span className="mb-1 block text-[11px] font-medium text-slate-500">{label}</span>
       {children}
       {error && <span className="mt-1 block text-xs text-rose-600">{error}</span>}
       {hint && !error && <span className="mt-1 block text-xs text-slate-500">{hint}</span>}

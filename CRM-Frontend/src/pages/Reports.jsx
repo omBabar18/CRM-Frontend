@@ -27,7 +27,7 @@ export function Reports() {
           </table>
         </div>
         <article className="card">
-          <h2>{name}</h2>
+          <h2 style={{ fontWeight: 500, color: '#475569' }}>{name}</h2>
           <ChartFrame>
             {({ width, height }) => (
               <BarChart width={width} height={height} data={built.chart}>

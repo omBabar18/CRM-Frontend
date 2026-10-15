@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { CalendarClock, Check, Plus, RotateCcw } from 'lucide-react'
 import { TASK_TYPES } from '../constants'
 import { useCrm } from '../context'
 import { fmtDateTime, fromLocalInput, isoOffset, staffName, toLocalInput } from '../utils'
@@ -8,10 +8,10 @@ import { AccentButton, Dialog, GhostButton } from '../components/enterprise/Shee
 import { SegmentedTabs } from '../components/enterprise/SegmentedTabs'
 import { StatusBadge } from '../components/enterprise/StatusBadge'
 
-const control = 'h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm outline-none focus:ring-1 focus:ring-amber-500'
+const control = 'h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[13px] font-normal text-slate-600 outline-none focus:ring-1 focus:ring-amber-500/40'
 
 export function Tasks() {
-  const { visibleTasks, db, addTask, setTaskStatus, user } = useCrm()
+  const { visibleTasks, db, addTask, setTaskStatus, updateTask, toast, user } = useCrm()
   const [open, setOpen] = useState(false)
   const [filter, setFilter] = useState('Open')
   const [form, setForm] = useState({ type: 'Call task', title: '', staffId: user.id, due: toLocalInput(isoOffset(0, 17, 0)), notes: '' })
@@ -31,7 +31,7 @@ export function Tasks() {
           <h1 className="text-lg font-semibold tracking-tight text-slate-900">Tasks</h1>
           <p className="text-xs font-normal text-slate-500">{rows.length} in this view · calls, visits, KYC, payments</p>
         </div>
-        <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-slate-950 px-3 text-sm font-medium text-white" onClick={() => setOpen(true)}>
+        <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#C9DCFF] bg-[#EAF2FF] px-3 text-sm font-medium text-[#1E4A9A] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#D7E6FF]" onClick={() => setOpen(true)}>
           <Plus size={15} /> New task
         </button>
       </div>
@@ -65,10 +65,23 @@ export function Tasks() {
                   <td className="px-3 py-2.5 text-sm text-slate-700">{staffName(db.staff, task.staffId)}</td>
                   <td className="px-3 py-2.5 text-xs tabular-nums text-slate-500">{fmtDateTime(task.due)}</td>
                   <td className="px-3 py-2.5"><StatusBadge tone={task.status === 'Done' ? 'emerald' : 'amber'}>{task.status}</StatusBadge></td>
-                  <td className="px-3 py-2.5 text-right">
-                    {task.status === 'Open' && (
-                      <button type="button" className="h-8 rounded-lg px-2 text-xs font-medium text-slate-600 hover:bg-slate-100" onClick={() => setTaskStatus(task.id, 'Done')}>Mark done</button>
-                    )}
+                  <td className="px-3 py-2.5">
+                    <div className="flex justify-end gap-1">
+                      {task.status === 'Open' ? (
+                        <>
+                          <button type="button" title="Mark done" aria-label="Mark done" className="grid h-7 w-7 place-items-center rounded-md border border-[#C9DCFF] bg-[#EAF2FF] text-[#1E4A9A] transition hover:bg-[#D7E6FF]" onClick={() => { setTaskStatus(task.id, 'Done'); toast('Task marked done') }}>
+                            <Check size={14} />
+                          </button>
+                          <button type="button" title="Snooze one day" aria-label="Snooze one day" className="grid h-7 w-7 place-items-center rounded-md border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50" onClick={() => { updateTask(task.id, { due: isoOffset(1, 17, 0) }); toast('Task moved to tomorrow') }}>
+                            <CalendarClock size={14} />
+                          </button>
+                        </>
+                      ) : (
+                        <button type="button" title="Reopen" aria-label="Reopen" className="grid h-7 w-7 place-items-center rounded-md border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50" onClick={() => { setTaskStatus(task.id, 'Open'); toast('Task reopened') }}>
+                          <RotateCcw size={14} />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -91,19 +104,19 @@ export function Tasks() {
       >
         <form id="new-task" className="ent-form grid gap-3" onSubmit={save}>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-slate-700">Type</span>
+            <span className="mb-1 block text-[11px] font-medium text-slate-500">Type</span>
             <Select value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value })} options={TASK_TYPES.map((item) => ({ value: item, label: item }))} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-slate-700">Title</span>
+            <span className="mb-1 block text-[11px] font-medium text-slate-500">Title</span>
             <input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Call Vikram before 4 PM" className={control} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-slate-700">Employee</span>
+            <span className="mb-1 block text-[11px] font-medium text-slate-500">Employee</span>
             <Select value={form.staffId} onChange={(event) => setForm({ ...form, staffId: event.target.value })} options={db.staff.filter((person) => person.active).map((person) => ({ value: person.id, label: person.name }))} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-slate-700">Due</span>
+            <span className="mb-1 block text-[11px] font-medium text-slate-500">Due</span>
             <input type="datetime-local" value={form.due} onChange={(event) => setForm({ ...form, due: event.target.value })} className={`${control} tabular-nums`} />
           </label>
         </form>

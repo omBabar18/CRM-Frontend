@@ -12,9 +12,11 @@ import { StatusBadge } from '../components/enterprise/StatusBadge'
 import { LeadTable } from '../components/leads/LeadTable'
 
 export function Leads() {
-  const { visibleLeads, db, user } = useCrm()
+  const { visibleLeads, db, user, updateLead } = useCrm()
   const [params, setParams] = useSearchParams()
-  const [view, setView] = useState('list')
+  const [view, setView] = useState('board')
+  const [dragId, setDragId] = useState('')
+  const [overColumn, setOverColumn] = useState('')
   const [q, setQ] = useState('')
   const [source, setSource] = useState('')
   const [status, setStatus] = useState('')
@@ -44,7 +46,7 @@ export function Leads() {
           <h1 className="text-lg font-semibold tracking-tight text-slate-900">Leads</h1>
           <p className="text-xs font-normal text-slate-500">{rows.length} records · {user.role}</p>
         </div>
-        <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-slate-950 px-3 text-sm font-medium text-white" onClick={() => setCreateOpen(true)}>
+        <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#C9DCFF] bg-[#EAF2FF] px-3 text-sm font-medium text-[#1E4A9A] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#D7E6FF]" onClick={() => setCreateOpen(true)}>
           <Plus size={15} /> New lead
         </button>
       </div>
@@ -64,18 +66,43 @@ export function Leads() {
       {view === 'list' ? (
         <LeadTable rows={rows} staff={db.staff} onOpen={openRecord} />
       ) : (
+        <>
+        <p className="text-[11px] text-slate-400">Drag a card into another column to change its status.</p>
         <div className="flex gap-3 overflow-x-auto pb-2">
           {PIPELINE.map((column) => {
             const cards = rows.filter((lead) => lead.status === column)
             return (
-              <div key={column} className="w-64 shrink-0 rounded-xl border border-slate-200 bg-slate-50/70 p-2">
+              <div
+                key={column}
+                onDragOver={(event) => { event.preventDefault(); setOverColumn(column) }}
+                onDragLeave={() => setOverColumn((value) => (value === column ? '' : value))}
+                onDrop={(event) => {
+                  event.preventDefault()
+                  const id = event.dataTransfer.getData('text/plain') || dragId
+                  setOverColumn('')
+                  setDragId('')
+                  if (!id) return
+                  const moving = visibleLeads.find((lead) => lead.id === id)
+                  if (!moving || moving.status === column) return
+                  updateLead(id, { status: column })
+                }}
+                className={`w-64 shrink-0 rounded-xl border p-2 transition ${overColumn === column ? 'border-amber-300 bg-amber-50/70' : 'border-slate-200 bg-slate-50/70'}`}
+              >
                 <div className="mb-2 flex items-center justify-between px-1">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{column}</p>
                   <span className="text-xs tabular-nums text-slate-500">{cards.length}</span>
                 </div>
-                <div className="space-y-2">
+                <div className="min-h-16 space-y-2">
                   {cards.map((lead) => (
-                    <button key={lead.id} type="button" className="block w-full rounded-lg border border-slate-200 bg-white p-3 text-left hover:bg-slate-50" onClick={() => openRecord(lead)}>
+                    <button
+                      key={lead.id}
+                      type="button"
+                      draggable
+                      onDragStart={(event) => { event.dataTransfer.setData('text/plain', lead.id); event.dataTransfer.effectAllowed = 'move'; setDragId(lead.id) }}
+                      onDragEnd={() => { setDragId(''); setOverColumn('') }}
+                      className={`block w-full cursor-grab rounded-lg border border-slate-200 bg-white p-3 text-left shadow-xs transition duration-200 hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing ${dragId === lead.id ? 'opacity-40' : ''}`}
+                      onClick={() => openRecord(lead)}
+                    >
                       <p className="text-sm font-medium text-slate-800">{lead.name}</p>
                       <p className="mt-1 text-xs tabular-nums text-slate-500">{lead.source} · {inr(lead.expectedAmount)}</p>
                       <div className="mt-2"><StatusBadge tone={lead.priority === 'High' ? 'amber' : 'slate'}>{lead.priority}</StatusBadge></div>
@@ -86,6 +113,7 @@ export function Leads() {
             )
           })}
         </div>
+        </>
       )}
 
       <Sheet

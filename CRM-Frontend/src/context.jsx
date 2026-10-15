@@ -388,6 +388,13 @@ export function CrmProvider({ children }) {
       })
     }
 
+    const updateTask = (id, patch) => {
+      update((draft) => {
+        const task = draft.tasks.find((row) => row.id === id)
+        if (task) Object.assign(task, patch)
+      })
+    }
+
     const requestReview = (customerId) => {
       update((draft) => {
         let review = draft.reviews.find((row) => row.customerId === customerId && row.status !== 'Completed')
@@ -533,6 +540,7 @@ export function CrmProvider({ children }) {
       setLoanStatus,
       addTask,
       setTaskStatus,
+      updateTask,
       requestReview,
       completeReview,
       addReferral,
