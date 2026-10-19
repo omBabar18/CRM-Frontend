@@ -6,6 +6,7 @@ import { followupBucket, fromLocalInput, nextCode, uid } from './utils'
 
 const KEY = 'dggold-crm-v1'
 const SESSION = 'dggold-session'
+const API = 'http://localhost:5005'
 const CrmContext = createContext(null)
 
 function loadDb() {
@@ -13,7 +14,7 @@ function loadDb() {
     const raw = localStorage.getItem(KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw)
-    if (parsed?.version !== 1 || !Array.isArray(parsed.leads)) return null
+    if (parsed?.version !== 3 || !Array.isArray(parsed.leads)) return null
     return parsed
   } catch {
     return null
@@ -76,12 +77,56 @@ export function CrmProvider({ children }) {
   }, [db.tasks, user])
 
   const api = useMemo(() => {
-    const login = (mobile, password) => {
-      const person = db.staff.find((row) => row.mobile === mobile && row.password === password && row.active)
-      if (!person) return { ok: false, message: 'Invalid credentials' }
-      setSession({ staffId: person.id })
+    const adoptStaff = (person, password) => {
+      const existing = db.staff.find((item) => item.mobile === person.mobile)
+      const staffId = existing?.id || person.id
+      update((draft) => {
+        const row = draft.staff.find((item) => item.mobile === person.mobile)
+        if (row) {
+          row.emailVerified = true
+          row.password = password
+          row.active = true
+          return
+        }
+        draft.staff.push({
+          id: person.id,
+          name: person.name,
+          mobile: person.mobile,
+          email: person.email || '',
+          password,
+          role: person.role || 'Sales Executive',
+          active: true,
+          emailVerified: true,
+          permissions: person.permissions || permissionsFor(person.role || 'Sales Executive'),
+        })
+      })
+      setSession({ staffId })
       setPreparing(true)
-      return { ok: true }
+    }
+
+    const login = async (mobile, password) => {
+      const person = db.staff.find((row) => row.mobile === mobile && row.password === password && row.active)
+      if (person && person.emailVerified !== false) {
+        setSession({ staffId: person.id })
+        setPreparing(true)
+        return { ok: true }
+      }
+      try {
+        const response = await fetch(`${API}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile, password }),
+        })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) return { ok: false, message: data.message || 'Invalid credentials' }
+        adoptStaff(data.user, password)
+        return { ok: true }
+      } catch {
+        if (person?.emailVerified === false) {
+          return { ok: false, message: 'Open the verification link in your email, then sign in.' }
+        }
+        return { ok: false, message: 'The desk API is not running, so this sign-in could not be checked.' }
+      }
     }
 
     const loginWithOtp = (mobile) => {
@@ -94,24 +139,35 @@ export function CrmProvider({ children }) {
 
     const logout = () => setSession(null)
 
-    const signup = ({ name, mobile, password }) => {
+    const signup = async ({ name, mobile, email, password }) => {
       if (!/^\d{10}$/.test(mobile)) return { ok: false, message: 'Enter a 10-digit mobile number.' }
-      if (db.staff.some((row) => row.mobile === mobile)) return { ok: false, message: 'This mobile is already registered.' }
-      const id = uid('s')
-      update((draft) => {
-        draft.staff.push({
-          id,
-          name,
-          mobile,
-          password,
-          role: 'Sales Executive',
-          active: true,
-          permissions: permissionsFor('Sales Executive'),
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || '')) return { ok: false, message: 'Enter a valid email address.' }
+      try {
+        const response = await fetch(`${API}/api/auth/signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, mobile, email, password }),
         })
-      })
-      setSession({ staffId: id })
-      setPreparing(true)
-      return { ok: true }
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) return { ok: false, message: data.message || 'Could not create the account.' }
+        update((draft) => {
+          if (draft.staff.some((row) => row.mobile === mobile)) return
+          draft.staff.push({
+            id: uid('s'),
+            name,
+            mobile,
+            email,
+            password,
+            role: 'Sales Executive',
+            active: true,
+            emailVerified: false,
+            permissions: permissionsFor('Sales Executive'),
+          })
+        })
+        return { ok: true, pending: true, message: data.message || 'Check your email and open the verification link.' }
+      } catch {
+        return { ok: false, message: 'Could not reach the API. Start the backend and try again.' }
+      }
     }
 
     const resetPassword = (mobile, password) => {

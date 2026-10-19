@@ -12,7 +12,7 @@ import { QuickActionButton } from '../components/dashboard/QuickActionButton'
 import { StatCard } from '../components/dashboard/StatCard'
 import { CustomerIcon, FacebookIcon, GoogleIcon, GooglePinIcon, InstagramIcon, OtherIcon, ReferralIcon, WalkInIcon, WhatsAppIcon } from '../components/dashboard/SourceIcons'
 
-const DELTA = { k24: 0.45, k22: 0.32, k18: -0.18 }
+const DELTA = { k24: null, k22: null, k18: null }
 const SOURCE_LOOK = {
   'Google Ads': { icon: GoogleIcon, box: 'bg-white', bar: 'bg-[#4285F4]' },
   Instagram: { icon: InstagramIcon, box: 'bg-white', bar: 'bg-[#d62976]' },
@@ -72,7 +72,7 @@ export function Dashboard() {
       </div>
       <p className="-mt-2 flex items-center gap-2 px-1 text-xs text-slate-400">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-          vs yesterday · {fmtTime(db.rates.updatedAt)}
+          Updated {fmtTime(db.rates.updatedAt)}
         </p>
 
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">

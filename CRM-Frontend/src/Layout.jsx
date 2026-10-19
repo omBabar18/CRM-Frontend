@@ -121,7 +121,7 @@ export function Layout() {
             </div>
           )}
         </div>
-        <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+        <nav className="no-scrollbar flex-1 space-y-5 overflow-y-auto px-3 pb-4">
           {NAV.map((group) => {
             const items = group.items.filter((item) => !item.perm || can(user, item.perm))
             if (!items.length) return null

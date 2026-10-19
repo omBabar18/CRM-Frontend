@@ -239,6 +239,8 @@ td strong { font-weight: 600; letter-spacing: -0.01em; }
 .card h2, .card h3, .kcol h3 { font-size: 14px; font-weight: 600; color: #334155; }
 textarea { min-height: 72px; resize: vertical; font-weight: 400; color: #475569; }
 
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { width: 0; height: 0; display: none; }
 .tabs { display: flex; gap: 6px; overflow: auto; margin-bottom: 12px; }
 .tab, .seg button, .chip {
   border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 6px 12px; font-weight: 400; font-size: 13px; color: #64748b; white-space: nowrap;

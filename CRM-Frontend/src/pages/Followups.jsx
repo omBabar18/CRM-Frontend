@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { CalendarDays } from 'lucide-react'
 import { useCrm } from '../context'
 import { fmtDateTime, staffName, telLink, waLink } from '../utils'
-import { FollowupCalendar } from '../components/calls/FollowupCalendar'
+import { FollowupCalendar, followupDayKey } from '../components/calls/FollowupCalendar'
 import { RowActions } from '../components/enterprise/RowActions'
 import { SegmentedTabs } from '../components/enterprise/SegmentedTabs'
 import { StatusBadge } from '../components/enterprise/StatusBadge'
@@ -20,8 +20,11 @@ export function Followups() {
   const { buckets, db, visibleLeads } = useCrm()
   const [tab, setTab] = useState('overdue')
   const [calendar, setCalendar] = useState(false)
+  const [day, setDay] = useState(null)
   const navigate = useNavigate()
-  const rows = buckets[tab] || []
+  const rows = day
+    ? visibleLeads.filter((lead) => followupDayKey(lead.nextFollowUp) === day)
+    : (buckets[tab] || [])
 
   return (
     <div className="min-w-0 space-y-3">
@@ -38,7 +41,19 @@ export function Followups() {
           <CalendarDays size={15} /> {calendar ? 'Hide calendar' : 'Calendar view'}
         </button>
       </div>
-      {calendar && <FollowupCalendar leads={visibleLeads} />}
+      {calendar && (
+        <FollowupCalendar
+          leads={visibleLeads}
+          selected={day}
+          onSelect={(key) => { setDay(key); if (key) setTab('today') }}
+        />
+      )}
+      {day && (
+        <div className="flex items-center justify-between rounded-lg border border-[#C9DCFF] bg-[#EAF2FF] px-3 py-2 text-sm text-[#1E4A9A]">
+          <span>{rows.length} follow-up{rows.length === 1 ? '' : 's'} on {day.split('-').reverse().join('/')}</span>
+          <button type="button" className="text-xs font-medium" onClick={() => setDay(null)}>Show the list again</button>
+        </div>
+      )}
       {buckets.overdue.length > 0 && tab !== 'overdue' && (
         <button type="button" className="flex w-full items-center justify-between rounded-lg border border-rose-200/70 bg-rose-50 px-3 py-2 text-left text-sm text-rose-800" onClick={() => setTab('overdue')}>
           <span>{buckets.overdue.length} overdue follow-ups are waiting.</span>

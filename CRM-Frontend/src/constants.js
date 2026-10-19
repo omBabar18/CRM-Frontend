@@ -164,7 +164,7 @@ export const TEMPLATES = [
 ]
 
 export function permissionsFor(role) {
-  if (role === 'Admin') {
+  if (role === 'Super Admin' || role === 'Admin') {
     return { viewAllLeads: true, manageStaff: true, setTargets: true, viewReports: true, manageFinance: true }
   }
   if (role === 'Manager') {
@@ -178,7 +178,7 @@ export function permissionsFor(role) {
 
 export function can(user, key) {
   if (!user) return false
-  if (user.role === 'Admin') return true
+  if (user.role === 'Admin' || user.role === 'Super Admin') return true
   return Boolean(user.permissions?.[key])
 }
 
